@@ -1,16 +1,50 @@
 <template>
-  <div class="h-full flex flex-col">
-    <el-header>HELP ME WRITE CODE</el-header>
+  <div class="h-full flex flex-col help-code-header">
+    <el-header>
+      <div class="bg-[#545c64] px-[10rem]">
+        <el-menu
+          :default-active="currentRoute"
+          class="el-menu-demo"
+          mode="horizontal"
+          background-color="#545c64"
+          text-color="#fff"
+          active-text-color="#ffd04b"
+        >
+          <el-menu-item index="/">
+            <router-link to="/"> 代码机器人 </router-link>
+          </el-menu-item>
+          <el-menu-item index="/knowledge">
+            <router-link to="/knowledge"> 知识库 </router-link>
+          </el-menu-item>
+        </el-menu>
+      </div>
+    </el-header>
     <el-container>
-      <el-aside width="200px">Aside</el-aside>
       <el-main>
-        <router-view></router-view>
+        <div class="w-[1000px] mx-auto">
+          <router-view></router-view>
+        </div>
       </el-main>
     </el-container>
   </div>
 </template>
 
+<script setup>
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
+
+const currentRoute = computed(() => {
+  return route.path;
+});
+</script>
+
 <style>
+.help-code-header .el-header {
+    padding: 0!important;
+}
+
 .el-header,
 .el-footer {
   background-color: #b3c0d1;
@@ -26,12 +60,12 @@
   line-height: 200px;
 }
 
-.el-main {
+/* .el-main {
   background-color: #e9eef3;
   color: #333;
   text-align: center;
   line-height: 160px;
-}
+} */
 
 body > .el-container {
   margin-bottom: 40px;
