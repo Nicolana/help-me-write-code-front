@@ -5,7 +5,7 @@
             <el-button :loading="loading" class="ml-4" type="primary" @click="onSubmit" size="large">搜索</el-button>
         </div>
 
-        <div class="mt-4 h-[800px] rounded-4 p-4 max-h-1000px overflow-y-scroll"
+        <div class="mt-4 rounded-4 p-4 h-[600px] overflow-y-scroll"
              style="box-shadow: 0 0 0 1px var(--el-input-border-color,var(--el-border-color)) inset" ref="codeContainer">
             <!--{{ content }}-->
             <div v-for="(page, index) in content">
