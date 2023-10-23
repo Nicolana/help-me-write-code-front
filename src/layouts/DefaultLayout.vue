@@ -16,6 +16,9 @@
           <el-menu-item index="/knowledge">
             <router-link to="/knowledge"> 知识库 </router-link>
           </el-menu-item>
+          <el-menu-item index="/upload">
+            <router-link to="/upload"> 知识库上传 </router-link>
+          </el-menu-item>
         </el-menu>
       </div>
     </el-header>

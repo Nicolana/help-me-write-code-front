@@ -23,3 +23,8 @@ body {
 #app {
   height: 100%;
 }
+
+code.hljs {
+    color: #333;
+    background: #f8f8f8;
+}
