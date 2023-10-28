@@ -11,6 +11,7 @@
             name="files"
             action="/api/upload_knowledges/"
             multiple
+            :on-success="onFileUploadSuccess"
             :limit="3"
           >
             <el-button color="#626aef" dark>上传文档到知识库</el-button>
@@ -29,4 +30,11 @@ import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const fileList = ref([]);
+
+const onFileUploadSuccess = () => {
+    ElMessage({
+        message: '上传成功',
+        type: 'success'
+    })
+}
 </script>
