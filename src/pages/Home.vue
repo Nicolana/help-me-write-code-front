@@ -11,10 +11,11 @@
                             <div
                                 v-for="(message, index) in state.messages"
                                 :key="index"
-                                class="flex items-center p-4 rounded-lg"
+                                class="flex items-center rounded-lg"
                                 :class="{
                                     'mt-4': index != 0,
-                                    'bg-[rgba(240,242,246,0.5)]': message.type === MessageType.User
+                                    'bg-[rgba(240,242,246,0.5)] p-4': message.type === MessageType.User,
+                                    'pl-4': message.type === MessageType.System
                                 }"
                             >
                                 <div
@@ -42,7 +43,9 @@
                                 >
                                 <img :src="UserImage" alt="user icon" />
                                 </div>
-                                <div class="flex-1">{{ message.content }}</div>
+                                <div class="flex-1">
+                                    <div v-html="message.content"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -72,6 +75,23 @@ import { isEmpty, copyContent } from "../utils/index.js";
 import { ElMessage } from "element-plus";
 import { Promotion } from "@element-plus/icons-vue";
 import UserImage from '../assets/imgs/user.png';
+import {Marked} from "marked";
+import {markedHighlight} from "marked-highlight";
+import hljs from 'highlight.js';
+import javascript from 'highlight.js/lib/languages/javascript';
+
+hljs.registerLanguage('javascript', javascript);
+
+
+const marked = new Marked(
+  markedHighlight({
+    langPrefix: 'hljs language-',
+    highlight(code, lang) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    }
+  })
+);
 
 const MessageType = {
     User: 1,
@@ -110,10 +130,11 @@ const state = reactive({
         },
         {
             type: MessageType.System,
-            content: `Hello! How can I assist you today?`,
+            content: marked.parse(`\`\`\`javascript\nconst highlight = "code";\n\`\`\``),
         },
     ],
 });
+
 const queryText = ref();
 const outPutText = ref();
 const loading = ref(false);
