@@ -1,10 +1,10 @@
 <template>
     <div class="chat-bot-container">
-        <div class="chat-bot-wrap flex h-[80vh] rounded-[0.5rem] overflow-hidden w-full">
+        <div class="chat-bot-wrap flex h-[calc(100vh-60px-24px-24px)] rounded-[0.5rem] overflow-hidden w-full">
             <div class="chat-bot-history w-[336px] bg-[rgb(245,245,245)] px-[16px] py-[16px] rounded-lg">
                 History is here
             </div>
-            <div class="chat-bot-main h-full flex flex-col flex-1 px-[16px] pt-4 pb-0">
+            <div class="chat-bot-main h-full flex flex-col flex-1 px-[16px] pt-4 pb-0 text-base">
                 <div class="chat-bot-modal flex-1 relative">
                     <div class="absolute top-0 left-0 w-full h-full overflow-y-scroll">
                         <div>
