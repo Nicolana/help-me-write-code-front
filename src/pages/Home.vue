@@ -15,7 +15,7 @@
                                 :class="{
                                     'mt-4': index != 0,
                                     'bg-[rgba(240,242,246,0.5)] p-4': message.type === MessageType.User,
-                                    'pl-4': message.type === MessageType.System
+                                    'pl-4': message.type === MessageType.System,
                                 }"
                             >
                                 <div
@@ -41,7 +41,7 @@
                                     class="mr-4 w-8 h-8 text-white rounded-[0.5rem] flex-shrink-0 flex items-center justify-center overflow-hidden"
                                     v-else
                                 >
-                                <img :src="UserImage" alt="user icon" />
+                                    <img :src="UserImage" alt="user icon" />
                                 </div>
                                 <div class="flex-1">
                                     <div v-html="message.content"></div>
@@ -55,12 +55,13 @@
                         <el-input
                             v-model="queryText"
                             type="textarea"
+                            @keydown="handleKeyCode($event)"
                             :autosize="{ minRows: 1, maxRows: 4 }"
                             placeholder="请输入对话内容，换行请使用Shift + Enter"
                             class="input-with-select flex-1"
                         >
                         </el-input>
-                        <el-button :icon="Promotion" />
+                        <el-button :icon="Promotion" loading-icon="" :loading="loading" @click="onGenerateClick" />
                     </div>
                 </div>
             </div>
@@ -70,27 +71,26 @@
 
 <script setup>
 import { computed, ref, reactive } from "vue";
-import { getPrompt } from "../api";
+import { getPrompt, getAnswer } from "../api";
 import { isEmpty, copyContent } from "../utils/index.js";
 import { ElMessage } from "element-plus";
 import { Promotion } from "@element-plus/icons-vue";
-import UserImage from '../assets/imgs/user.png';
-import {Marked} from "marked";
-import {markedHighlight} from "marked-highlight";
-import hljs from 'highlight.js';
-import javascript from 'highlight.js/lib/languages/javascript';
+import UserImage from "../assets/imgs/user.png";
+import { Marked } from "marked";
+import { markedHighlight } from "marked-highlight";
+import hljs from "highlight.js";
+import javascript from "highlight.js/lib/languages/javascript";
 
-hljs.registerLanguage('javascript', javascript);
-
+hljs.registerLanguage("javascript", javascript);
 
 const marked = new Marked(
-  markedHighlight({
-    langPrefix: 'hljs language-',
-    highlight(code, lang) {
-      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-      return hljs.highlight(code, { language }).value;
-    }
-  })
+    markedHighlight({
+        langPrefix: "hljs language-",
+        highlight(code, lang) {
+            const language = hljs.getLanguage(lang) ? lang : "plaintext";
+            return hljs.highlight(code, { language }).value;
+        },
+    })
 );
 
 const MessageType = {
@@ -100,43 +100,18 @@ const MessageType = {
 
 const state = reactive({
     messages: [
-        {
-            type: MessageType.User,
-            content: `Hi`,
-        },
-        {
-            type: MessageType.System,
-            content: `Hello! How can I assist you today?`,
-        },
-        {
-            type: MessageType.User,
-            content: `Hi`,
-        },
+        // {
+        //     type: MessageType.User,
+        //     content: `Hi`,
+        // },
         {
             type: MessageType.System,
             content: `Hello! How can I assist you today?`,
-        },
-        {
-            type: MessageType.User,
-            content: `Hi`,
-        },
-        {
-            type: MessageType.System,
-            content: `Hello! How can I assist you today?`,
-        },
-        {
-            type: MessageType.User,
-            content: `Hi`,
-        },
-        {
-            type: MessageType.System,
-            content: marked.parse(`\`\`\`javascript\nconst highlight = "code";\n\`\`\``),
         },
     ],
 });
 
 const queryText = ref();
-const outPutText = ref();
 const loading = ref(false);
 
 const isEmptyOutputText = computed(() => isEmpty(outPutText.value));
@@ -148,6 +123,7 @@ const onCopy = (text) => {
         type: "success",
     });
 };
+
 const onGenerateClick = async () => {
     if (isEmpty(queryText.value?.trim())) {
         ElMessage({
@@ -157,12 +133,36 @@ const onGenerateClick = async () => {
         return;
     }
     loading.value = true;
-    const res = await getPrompt({ query: queryText.value });
+    state.messages.push({
+        type: MessageType.User,
+        content: queryText.value
+    })
+    const payload = { query: queryText.value }
+    queryText.value = '';
+    const res = await getAnswer(payload);
+    
     loading.value = false;
-    if (res.status === 200) {
-        outPutText.value = res.data;
+    if (res.code === 200) {
+        // outPutText.value = res.data;
+        state.messages.push({
+            type: MessageType.System,
+            content: marked.parse(res.data?.output ?? 'error')
+        })
     }
 };
+
+function handleKeyCode(event) {
+    const keyCode = event.which || event.keyCode;
+
+    if (keyCode === 13 && !event.shiftKey) {
+        if (!event.metaKey) {
+            event.preventDefault();
+            onGenerateClick();
+        } else {
+            queryText.value = queryText.value + "\n";
+        }
+    }
+}
 </script>
 
 <style lang="scss">
