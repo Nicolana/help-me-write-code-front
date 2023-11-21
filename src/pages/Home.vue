@@ -61,7 +61,7 @@
                             class="input-with-select flex-1"
                         >
                         </el-input>
-                        <el-button :icon="Promotion" loading-icon="" :loading="loading" @click="onGenerateClick" />
+                        <el-button :icon="Promotion" :loading="loading" @click="onGenerateClick" />
                     </div>
                 </div>
             </div>
@@ -70,7 +70,7 @@
 </template>
 
 <script setup>
-import { computed, ref, reactive, onMounted } from "vue";
+import { computed, ref, reactive } from "vue";
 import { getAnswer } from "../api";
 import { isEmpty, copyContent } from "../utils/index.js";
 import { ElMessage } from "element-plus";
@@ -80,7 +80,6 @@ import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import javascript from "highlight.js/lib/languages/javascript";
-import NSocket from "../utils/socket.js";
 
 hljs.registerLanguage("javascript", javascript);
 
@@ -104,6 +103,7 @@ const state = reactive({
         {
             type: MessageType.System,
             content: `Hello! How can I assist you today?`,
+            status: "FINISH",
         },
     ],
 });
@@ -118,15 +118,20 @@ const pushMessage = ({ message, id }) => {
         return;
     }
     item.content = message.content;
+    item.status = message.status;
 };
 
 const queryText = ref();
-const loading = ref(false);
-
-const isEmptyOutputText = computed(() => isEmpty(outPutText.value));
+const loading = computed(() => state.messages?.some((item) => item.status !== "FINISH"));
 
 async function sendMessage(message) {
-    const response = await fetch("/api/stream");
+    const response = await fetch("/api/bot/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: message }),
+    });
     if (!response.ok) {
         throw new Error("Network response was not ok");
     }
@@ -134,19 +139,27 @@ async function sendMessage(message) {
     let chunks = [];
     const id = Date.now();
 
+    const messageItem = {
+        type: MessageType.System,
+        content: "正在生成中...",
+        status: "LOADING",
+    };
+    pushMessage({ message: messageItem, id });
+
     while (true) {
         const { done, value } = await reader.read();
         if (done) {
+            const result = new TextDecoder("utf-8").decode(
+                new Uint8Array(chunks.reduce((acc, chunk) => [...acc, ...Array.from(chunk)], []))
+            );
+            pushMessage({ message: { type: MessageType.System, content: result, status: "FINISH" }, id });
             break;
         }
-        chunks.push(value);
-
         const result = new TextDecoder("utf-8").decode(
             new Uint8Array(chunks.reduce((acc, chunk) => [...acc, ...Array.from(chunk)], []))
         );
-        console.log(state.messages)
-        console.log("id =", id);
         pushMessage({ message: { type: MessageType.System, content: result }, id });
+        chunks.push(value);
     }
 }
 
@@ -159,6 +172,9 @@ const onCopy = (text) => {
 };
 
 const onGenerateClick = async () => {
+    if (loading.value) {
+        return;
+    }
     if (isEmpty(queryText.value?.trim())) {
         ElMessage({
             message: "问题不能为空",
@@ -166,23 +182,16 @@ const onGenerateClick = async () => {
         });
         return;
     }
-    // loading.value = true;
-    state.messages.push({
-        type: MessageType.User,
-        content: queryText.value,
+    pushMessage({
+        message: {
+            type: MessageType.User,
+            content: queryText.value,
+            status: "FINISH",
+        },
+        id: Date.now(),
     });
-    const payload = { query: queryText.value };
+    sendMessage(queryText.value);
     queryText.value = "";
-    sendMessage(payload);
-
-    // loading.value = false;
-    // if (res.code === 200) {
-    //     // outPutText.value = res.data;
-    //     state.messages.push({
-    //         type: MessageType.System,
-    //         content: marked.parse(res.data?.output ?? "error"),
-    //     });
-    // }
 };
 
 function handleKeyCode(event) {
