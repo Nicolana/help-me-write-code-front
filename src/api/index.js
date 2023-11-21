@@ -16,3 +16,14 @@ export function getSearch(payload) {
 export function getAnswer(payload) {
     return request.post('/bot/chat', payload)
 }
+
+
+/**
+ * 登录
+ * @param {*} payload
+ * @returns
+ * @description
+ */
+export function login(payload) {
+    return request.post('/user/login', payload)
+}
