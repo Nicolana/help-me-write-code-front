@@ -27,3 +27,8 @@ export function getAnswer(payload) {
 export function login(payload) {
     return request.post('/user/login', payload)
 }
+
+
+export function getUserInfo(payload) {
+    return request.get('/user/info', payload)
+}

@@ -1,22 +1,21 @@
-// api.js
-
 import axios from 'axios';
-
 const baseURL = '/api'; // 你的API基础URL
 
 const axiosInstance = axios.create({
   baseURL,
   headers: {
     'Content-Type': 'application/json',
-    // 如果需要授权，可以在这里添加授权头
-    // 'Authorization': `Bearer ${token}`
+    // 'Authorization': `Bearer ${localStorage.getItem('token')}`
   },
 });
 
 // 请求拦截器
 axiosInstance.interceptors.request.use(
   (config) => {
-    // 在请求发送之前可以进行一些操作，例如添加Loading状态
+    config.headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
     return config;
   },
   (error) => {
