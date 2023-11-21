@@ -11,7 +11,7 @@
                             <div
                                 v-for="(message, index) in state.messages"
                                 :key="index"
-                                class="flex items-center rounded-lg"
+                                class="flex items-start rounded-lg"
                                 :class="{
                                     'mt-4': index != 0,
                                     'bg-[rgba(240,242,246,0.5)] p-4': message.type === MessageType.User,
@@ -70,8 +70,8 @@
 </template>
 
 <script setup>
-import { computed, ref, reactive } from "vue";
-import { getPrompt, getAnswer } from "../api";
+import { computed, ref, reactive, onMounted } from "vue";
+import { getAnswer } from "../api";
 import { isEmpty, copyContent } from "../utils/index.js";
 import { ElMessage } from "element-plus";
 import { Promotion } from "@element-plus/icons-vue";
@@ -80,6 +80,7 @@ import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import javascript from "highlight.js/lib/languages/javascript";
+import NSocket from "../utils/socket.js";
 
 hljs.registerLanguage("javascript", javascript);
 
@@ -100,10 +101,6 @@ const MessageType = {
 
 const state = reactive({
     messages: [
-        // {
-        //     type: MessageType.User,
-        //     content: `Hi`,
-        // },
         {
             type: MessageType.System,
             content: `Hello! How can I assist you today?`,
@@ -111,10 +108,47 @@ const state = reactive({
     ],
 });
 
+const pushMessage = ({ message, id }) => {
+    const item = state.messages.find((item) => item.id === id);
+    if (!item) {
+        state.messages.push({
+            ...message,
+            id,
+        });
+        return;
+    }
+    item.content = message.content;
+};
+
 const queryText = ref();
 const loading = ref(false);
 
 const isEmptyOutputText = computed(() => isEmpty(outPutText.value));
+
+async function sendMessage(message) {
+    const response = await fetch("/api/stream");
+    if (!response.ok) {
+        throw new Error("Network response was not ok");
+    }
+    const reader = response.body.getReader();
+    let chunks = [];
+    const id = Date.now();
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+        chunks.push(value);
+
+        const result = new TextDecoder("utf-8").decode(
+            new Uint8Array(chunks.reduce((acc, chunk) => [...acc, ...Array.from(chunk)], []))
+        );
+        console.log(state.messages)
+        console.log("id =", id);
+        pushMessage({ message: { type: MessageType.System, content: result }, id });
+    }
+}
 
 const onCopy = (text) => {
     copyContent(text);
@@ -132,23 +166,23 @@ const onGenerateClick = async () => {
         });
         return;
     }
-    loading.value = true;
+    // loading.value = true;
     state.messages.push({
         type: MessageType.User,
-        content: queryText.value
-    })
-    const payload = { query: queryText.value }
-    queryText.value = '';
-    const res = await getAnswer(payload);
-    
-    loading.value = false;
-    if (res.code === 200) {
-        // outPutText.value = res.data;
-        state.messages.push({
-            type: MessageType.System,
-            content: marked.parse(res.data?.output ?? 'error')
-        })
-    }
+        content: queryText.value,
+    });
+    const payload = { query: queryText.value };
+    queryText.value = "";
+    sendMessage(payload);
+
+    // loading.value = false;
+    // if (res.code === 200) {
+    //     // outPutText.value = res.data;
+    //     state.messages.push({
+    //         type: MessageType.System,
+    //         content: marked.parse(res.data?.output ?? "error"),
+    //     });
+    // }
 };
 
 function handleKeyCode(event) {
