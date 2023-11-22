@@ -2,16 +2,21 @@
     <div class="chat-bot-container">
         <div class="chat-bot-wrap flex h-[calc(100vh-60px-24px-24px)] rounded-[0.5rem] overflow-hidden w-full">
             <div class="chat-bot-history w-[336px] bg-[rgb(245,245,245)] px-[16px] py-[16px] rounded-lg flex flex-col">
-                <div class="flex flex-col overflow-y-auto gap-1 flex-1">
+                <div class="flex flex-col overflow-y-auto gap-1 flex-1" v-loading="chatDeleteLoading">
                     <div
-                        class="h-[44px] w-full flex items-center rounded-md px-2 hover:bg-gray-200 cursor-pointer"
+                        class="chat-bot-history-row h-[44px] w-full flex items-center rounded-md px-2 hover:bg-gray-200 cursor-pointer"
                         v-for="item in chatList"
                         :class="[item.id === userStore.chatId ? 'bg-gray-200' : '']"
                         :key="item.id"
                         @click="userStore.setChat(item.id)"
                     >
-                        <div class="flex-1 text-gray-500">
+                        <div class="flex-1 text-gray-500 chat-bot-history-row-text">
                             {{ item.name }}
+                        </div>
+                        <div class="chat-bot-history-row-delete" @click="deleteChatForMe(item.id)">
+                            <el-icon>
+                                <Delete />
+                            </el-icon>
                         </div>
                     </div>
                 </div>
@@ -30,7 +35,11 @@
             </div>
             <div class="chat-bot-main h-full flex flex-col flex-1 px-[16px] pt-4 pb-0 text-base">
                 <div class="chat-bot-modal flex-1 relative">
-                    <div class="absolute top-0 left-0 w-full h-full overflow-y-scroll" v-loading="messageLoading">
+                    <div
+                        class="absolute top-0 left-0 w-full h-full overflow-y-scroll"
+                        ref="talkModal"
+                        v-loading="messageLoading"
+                    >
                         <div>
                             <div
                                 v-for="(message, index) in state.messages"
@@ -97,9 +106,9 @@
 import { computed, ref, reactive, watch } from "vue";
 import { isEmpty } from "../utils/index.js";
 import { ElMessage } from "element-plus";
-import { Promotion, Plus } from "@element-plus/icons-vue";
+import { Promotion, Plus, Delete } from "@element-plus/icons-vue";
 import UserImage from "../assets/imgs/user.png";
-import { getChatList, createChat, getMessages } from "@/api";
+import { getChatList, createChat, getMessages, deleteChat } from "@/api";
 import { useUserStore } from "@/store/user";
 import { markdown } from "@/utils/markdown";
 
@@ -145,23 +154,24 @@ const createNewChat = async () => {
 
 const MessageType = {
     // 用户
-    User: 'user',
+    User: "user",
     // 系统
-    System: 'system',
+    System: "system",
     // 机器人助手
-    Assistant: 'assistant'
+    Assistant: "assistant",
 };
+const talkModal = ref(null);
 
 const getMessageTypeByRole = (role) => {
     switch (role) {
-        case 'user':
+        case "user":
             return MessageType.User;
-        case 'assistant':
+        case "assistant":
             return MessageType.Assistant;
         default:
             return MessageType.System;
     }
-}
+};
 
 const state = reactive({
     messages: [
@@ -178,7 +188,6 @@ const getHistoryMessages = async (chat_id) => {
     messageLoading.value = true;
     const res = await getMessages(chat_id);
     messageLoading.value = false;
-    console.log("Messages =", res);
     if (res.data) {
         state.messages = res.data.map((item) => {
             return {
@@ -187,15 +196,48 @@ const getHistoryMessages = async (chat_id) => {
                 status: "FINISH",
             };
         });
+        scrollToModalBottom();
     }
-}
+};
 
-watch(() => userStore.chatId, (newChatId) => {
-    console.log("chatId update =", newChatId);
-    if (newChatId) {
-        getHistoryMessages(newChatId);
+const scrollToModalBottom = () => {
+    setTimeout(() => {
+        talkModal.value.scrollTo(0, talkModal.value.scrollHeight);
+    }, 0);
+};
+
+watch(
+    () => userStore.chatId,
+    (newChatId) => {
+        console.log("chatId update =", newChatId);
+        if (newChatId) {
+            getHistoryMessages(newChatId);
+        }
+    },
+    { immediate: true }
+);
+
+/**
+ * 删除一个聊天记录
+ */
+
+ const chatDeleteLoading = ref(false);
+const deleteChatForMe = async (id) => {
+    if (chatDeleteLoading.value) return;
+    chatDeleteLoading.value = true;
+    const res = await deleteChat(id);
+    chatDeleteLoading.value = false;
+    if (res.data) {
+        ElMessage({
+            message: "删除成功",
+            type: "success",
+        })
+        if (id === userStore.chatId) {
+            userStore.setChat(null);
+        }
+        getList();
     }
-}, { immediate: true })
+};
 
 const pushMessage = ({ message, id }) => {
     const item = state.messages.find((item) => item.id === id);
@@ -204,10 +246,13 @@ const pushMessage = ({ message, id }) => {
             ...message,
             id,
         });
+        scrollToModalBottom();
         return;
     }
-    item.content = message.content;
+
+    item.content = markdown.parse(message.content);
     item.status = message.status;
+    scrollToModalBottom();
 };
 
 const queryText = ref();
@@ -218,7 +263,7 @@ async function sendMessage(message) {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({ query: message, chat_id: userStore.chatId }),
     });
@@ -309,6 +354,26 @@ function handleKeyCode(event) {
             height: 53px;
             font-size: 20px;
             border: none;
+        }
+    }
+}
+
+.chat-bot-history {
+    .chat-bot-history-row {
+        .chat-bot-history-row-text {
+        }
+        .chat-bot-history-row-delete {
+            display: none;
+        }
+        &:hover {
+            .chat-bot-history-row-delete {
+                display: block;
+                color: rgba(0, 0, 0, 0.4);
+                cursor: pointer;
+                &:hover {
+                    color: rgba(0, 0, 0, 0.3);
+                }
+            }
         }
     }
 }

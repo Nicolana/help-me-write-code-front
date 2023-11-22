@@ -18,7 +18,7 @@ export function createChat(payload) {
  * @description 删除聊天
  */
 export function deleteChat(id) {
-    return del(`/chat/delete`, { id })
+    return del(`/chat/delete/${id}`)
 }
 
 /**
