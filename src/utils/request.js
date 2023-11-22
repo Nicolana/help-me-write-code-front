@@ -38,6 +38,7 @@ axiosInstance.interceptors.response.use(
 
 // 封装GET请求
 export const get = async (url, params = {}) => {
+    console.log("params =", params)
   try {
     const response = await axiosInstance.get(url, { params });
     return response;
@@ -56,6 +57,24 @@ export const post = async (url, data = {}) => {
   }
 };
 
-// 更多请求方法，例如PUT、DELETE等，可以按需进行封装
+// 封装PUT、DELETE
+export const put = async (url, data = {}) => {
+    try {
+        const response = await axiosInstance.put(url, data);
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const del = async (url, data = {}) => {
+    try {
+        const response = await axiosInstance.delete(url, data);
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};
+
 
 export default axiosInstance;

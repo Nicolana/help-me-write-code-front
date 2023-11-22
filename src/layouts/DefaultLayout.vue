@@ -37,7 +37,7 @@
         </el-header>
         <el-container>
             <el-main>
-                <div class="w-[1400px] mx-auto">
+                <div class="max-w-[1440px] mx-auto">
                     <router-view></router-view>
                 </div>
             </el-main>

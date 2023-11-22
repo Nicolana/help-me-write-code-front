@@ -1,12 +1,36 @@
 <template>
     <div class="chat-bot-container">
         <div class="chat-bot-wrap flex h-[calc(100vh-60px-24px-24px)] rounded-[0.5rem] overflow-hidden w-full">
-            <div class="chat-bot-history w-[336px] bg-[rgb(245,245,245)] px-[16px] py-[16px] rounded-lg">
-                History is here
+            <div class="chat-bot-history w-[336px] bg-[rgb(245,245,245)] px-[16px] py-[16px] rounded-lg flex flex-col">
+                <div class="flex flex-col overflow-y-auto gap-1 flex-1">
+                    <div
+                        class="h-[44px] w-full flex items-center rounded-md px-2 hover:bg-gray-200 cursor-pointer"
+                        v-for="item in chatList"
+                        :class="[item.id === userStore.chatId ? 'bg-gray-200' : '']"
+                        :key="item.id"
+                        @click="userStore.setChat(item.id)"
+                    >
+                        <div class="flex-1 text-gray-500">
+                            {{ item.name }}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-shrink-0">
+                    <el-button
+                        :loading="newChatRequestLoading"
+                        class="w-full"
+                        :icon="Plus"
+                        color="#626aef"
+                        :dark="isDark"
+                        size="large"
+                        @click="createNewChat"
+                        >新的聊天</el-button
+                    >
+                </div>
             </div>
             <div class="chat-bot-main h-full flex flex-col flex-1 px-[16px] pt-4 pb-0 text-base">
                 <div class="chat-bot-modal flex-1 relative">
-                    <div class="absolute top-0 left-0 w-full h-full overflow-y-scroll">
+                    <div class="absolute top-0 left-0 w-full h-full overflow-y-scroll" v-loading="messageLoading">
                         <div>
                             <div
                                 v-for="(message, index) in state.messages"
@@ -70,33 +94,74 @@
 </template>
 
 <script setup>
-import { computed, ref, reactive } from "vue";
-import { getAnswer } from "../api";
-import { isEmpty, copyContent } from "../utils/index.js";
+import { computed, ref, reactive, watch } from "vue";
+import { isEmpty } from "../utils/index.js";
 import { ElMessage } from "element-plus";
-import { Promotion } from "@element-plus/icons-vue";
+import { Promotion, Plus } from "@element-plus/icons-vue";
 import UserImage from "../assets/imgs/user.png";
-import { Marked } from "marked";
-import { markedHighlight } from "marked-highlight";
-import hljs from "highlight.js";
-import javascript from "highlight.js/lib/languages/javascript";
+import { getChatList, createChat, getMessages } from "@/api";
+import { useUserStore } from "@/store/user";
+import { markdown } from "@/utils/markdown";
 
-hljs.registerLanguage("javascript", javascript);
+/**
+ * 获取Chat List
+ */
+const userStore = useUserStore();
+const chatList = ref([]);
+const getList = async () => {
+    const res = await getChatList();
+    chatList.value = res.data;
+    if (!userStore.chatId) {
+        userStore.setChat(res?.data?.[0]?.id);
+    }
+};
 
-const marked = new Marked(
-    markedHighlight({
-        langPrefix: "hljs language-",
-        highlight(code, lang) {
-            const language = hljs.getLanguage(lang) ? lang : "plaintext";
-            return hljs.highlight(code, { language }).value;
-        },
-    })
-);
+getList();
+
+/**
+ * 创建一个新的聊天
+ */
+const newChatRequestLoading = ref(false);
+const createNewChat = async () => {
+    newChatRequestLoading.value = true;
+    const payload = {
+        name: "新的聊天",
+    };
+    const res = await createChat(payload);
+    newChatRequestLoading.value = false;
+    if (res.data) {
+        ElMessage({
+            message: "创建成功",
+            type: "success",
+        });
+        userStore.setChat(res.data?.id);
+        getList();
+    }
+};
+
+/**
+ * 获取当前chat的消息历史记录
+ */
 
 const MessageType = {
-    User: 1,
-    System: 2,
+    // 用户
+    User: 'user',
+    // 系统
+    System: 'system',
+    // 机器人助手
+    Assistant: 'assistant'
 };
+
+const getMessageTypeByRole = (role) => {
+    switch (role) {
+        case 'user':
+            return MessageType.User;
+        case 'assistant':
+            return MessageType.Assistant;
+        default:
+            return MessageType.System;
+    }
+}
 
 const state = reactive({
     messages: [
@@ -107,6 +172,30 @@ const state = reactive({
         },
     ],
 });
+const messageLoading = ref(false);
+
+const getHistoryMessages = async (chat_id) => {
+    messageLoading.value = true;
+    const res = await getMessages(chat_id);
+    messageLoading.value = false;
+    console.log("Messages =", res);
+    if (res.data) {
+        state.messages = res.data.map((item) => {
+            return {
+                type: getMessageTypeByRole(item.role),
+                content: markdown.parse(item.content),
+                status: "FINISH",
+            };
+        });
+    }
+}
+
+watch(() => userStore.chatId, (newChatId) => {
+    console.log("chatId update =", newChatId);
+    if (newChatId) {
+        getHistoryMessages(newChatId);
+    }
+})
 
 const pushMessage = ({ message, id }) => {
     const item = state.messages.find((item) => item.id === id);
@@ -162,14 +251,6 @@ async function sendMessage(message) {
         chunks.push(value);
     }
 }
-
-const onCopy = (text) => {
-    copyContent(text);
-    ElMessage({
-        message: "复制成功",
-        type: "success",
-    });
-};
 
 const onGenerateClick = async () => {
     if (loading.value) {

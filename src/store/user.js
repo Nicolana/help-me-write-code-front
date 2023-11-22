@@ -4,12 +4,13 @@ import { login, getUserInfo } from '../api'
 export const useUserStore = defineStore('user', {
     state: () => ({
         token: localStorage.getItem('token'),
-        userInfo: {}
+        userInfo: {},
+        chatId: null,
     }),
     getters: {
         getToken() {
             return this.token
-        }
+        },
     },
     actions: {
         setToken(token) {
@@ -31,6 +32,9 @@ export const useUserStore = defineStore('user', {
             this.token = '';
             this.userInfo = {};
             localStorage.removeItem('token');
+        },
+        setChat(id) {
+            this.chatId = id
         }
     }
 })

@@ -1,11 +1,11 @@
-import request from '../utils/request';
+import { post, get } from '../utils/request';
 
 export function getPrompt(payload) {
-    return request.post("/get_prompt", payload)
+    return post("/get_prompt", payload)
 }
 
 export function getSearch(payload) {
-    return request.post('/search', payload)
+    return post('/search', payload)
 }
 
 /**
@@ -14,7 +14,7 @@ export function getSearch(payload) {
  * @returns 
  */
 export function getAnswer(payload) {
-    return request.post('/bot/chat', payload)
+    return post('/bot/chat', payload)
 }
 
 
@@ -25,10 +25,12 @@ export function getAnswer(payload) {
  * @description
  */
 export function login(payload) {
-    return request.post('/user/login', payload)
+    return post('/user/login', payload)
 }
 
 
 export function getUserInfo(payload) {
-    return request.get('/user/info', payload)
+    return get('/user/info', payload)
 }
+
+export * from './chat';
