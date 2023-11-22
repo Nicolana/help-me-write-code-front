@@ -39,7 +39,7 @@
                                 :class="{
                                     'mt-4': index != 0,
                                     'bg-[rgba(240,242,246,0.5)] p-4': message.type === MessageType.User,
-                                    'pl-4': message.type === MessageType.System,
+                                    'pl-4': [MessageType.System, MessageType.Assistant].includes(message.type),
                                 }"
                             >
                                 <div
@@ -195,7 +195,7 @@ watch(() => userStore.chatId, (newChatId) => {
     if (newChatId) {
         getHistoryMessages(newChatId);
     }
-})
+}, { immediate: true })
 
 const pushMessage = ({ message, id }) => {
     const item = state.messages.find((item) => item.id === id);
@@ -218,8 +218,9 @@ async function sendMessage(message) {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ query: message }),
+        body: JSON.stringify({ query: message, chat_id: userStore.chatId }),
     });
     if (!response.ok) {
         throw new Error("Network response was not ok");
