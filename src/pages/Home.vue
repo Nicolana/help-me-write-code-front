@@ -76,7 +76,7 @@
                                 >
                                     <img :src="UserImage" alt="user icon" />
                                 </div>
-                                <div class="flex-1">
+                                <div class="flex-1 text-[14px]">
                                     <div class="break-words" v-html="message.content"></div>
                                 </div>
                             </div>
@@ -209,7 +209,6 @@ const scrollToModalBottom = () => {
 watch(
     () => userStore.chatId,
     (newChatId) => {
-        console.log("chatId update =", newChatId);
         if (newChatId) {
             getHistoryMessages(newChatId);
         }
