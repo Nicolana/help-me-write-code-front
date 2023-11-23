@@ -77,7 +77,7 @@
                                     <img :src="UserImage" alt="user icon" />
                                 </div>
                                 <div class="flex-1">
-                                    <div v-html="message.content"></div>
+                                    <div class="break-words" v-html="message.content"></div>
                                 </div>
                             </div>
                         </div>
@@ -259,6 +259,13 @@ const queryText = ref();
 const loading = computed(() => state.messages?.some((item) => item.status !== "FINISH"));
 
 async function sendMessage(message) {
+    const id = Date.now();
+    const messageItem = {
+        type: MessageType.System,
+        content: "正在生成中...",
+        status: "LOADING",
+    };
+    pushMessage({ message: messageItem, id });
     const response = await fetch("/api/bot/chat", {
         method: "POST",
         headers: {
@@ -272,14 +279,6 @@ async function sendMessage(message) {
     }
     const reader = response.body.getReader();
     let chunks = [];
-    const id = Date.now();
-
-    const messageItem = {
-        type: MessageType.System,
-        content: "正在生成中...",
-        status: "LOADING",
-    };
-    pushMessage({ message: messageItem, id });
 
     while (true) {
         const { done, value } = await reader.read();
@@ -312,7 +311,7 @@ const onGenerateClick = async () => {
     pushMessage({
         message: {
             type: MessageType.User,
-            content: queryText.value,
+            content: markdown.parse(queryText.value),
             status: "FINISH",
         },
         id: Date.now(),
