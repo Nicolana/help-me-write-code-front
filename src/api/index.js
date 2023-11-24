@@ -34,3 +34,4 @@ export function getUserInfo(payload) {
 }
 
 export * from './chat';
+export * from './knowledge';

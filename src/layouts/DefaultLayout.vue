@@ -1,25 +1,19 @@
 <template>
     <div class="h-full flex flex-col help-code-header">
         <el-header>
-            <div class="bg-[#545c64] px-[10rem] flex items-center justify-between">
-                <el-menu
-                    :default-active="currentRoute"
-                    class="el-menu-demo"
-                    mode="horizontal"
-                    background-color="#545c64"
-                    text-color="#fff"
-                    active-text-color="#ffd04b"
-                >
-                    <el-menu-item index="/">
-                        <router-link to="/"> 代码机器人 </router-link>
-                    </el-menu-item>
-                    <el-menu-item index="/knowledge">
-                        <router-link to="/knowledge"> 知识库 </router-link>
-                    </el-menu-item>
-                    <el-menu-item index="/upload">
-                        <router-link to="/upload"> 知识库上传 </router-link>
-                    </el-menu-item>
-                </el-menu>
+            <div class="flex items-center justify-between max-w-[1200px] mx-auto">
+                <div class="menu-wrap flex items-center gap-4">
+                    <div
+                        class="menu-item px-2 text-gray-700"
+                        :class="{
+                            '!text-[#626aef]': currentRoute === item.path,
+                        }"
+                        v-for="item in menus"
+                        :key="item.path"
+                    >
+                        <router-link :to="item.path"> {{ item.title }} </router-link>
+                    </div>
+                </div>
 
                 <div class="header-right flex-shrink-0">
                     <div class="user-info flex items-center" v-if="userInfo.id">
@@ -37,7 +31,7 @@
         </el-header>
         <el-container>
             <el-main>
-                <div class="max-w-[1440px] mx-auto">
+                <div class="max-w-[1200px] mx-auto">
                     <router-view></router-view>
                 </div>
             </el-main>
@@ -46,7 +40,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useUserStore } from "../store/user";
 import { ElButton } from "element-plus";
@@ -67,8 +61,23 @@ const userInfo = computed(() => {
 
 const logout = () => {
     store.logout();
-    router.push('/login')
+    router.push("/login");
 };
+
+const menus = ref([
+    {
+        title: "聊天机器人",
+        path: "/",
+    },
+    {
+        title: "知识库",
+        path: "/knowledge",
+    },
+    {
+        title: "知识库管理",
+        path: "/config",
+    },
+]);
 </script>
 
 <style>
