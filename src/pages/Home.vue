@@ -175,11 +175,11 @@ const getMessageTypeByRole = (role) => {
 
 const state = reactive({
     messages: [
-        {
-            type: MessageType.System,
-            content: `Hello! How can I assist you today?`,
-            status: "FINISH",
-        },
+        // {
+        //     type: MessageType.System,
+        //     content: `Hello! How can I assist you today?`,
+        //     status: "FINISH",
+        // },
     ],
 });
 const messageLoading = ref(false);
@@ -193,6 +193,7 @@ const getHistoryMessages = async (chat_id) => {
             return {
                 type: getMessageTypeByRole(item.role),
                 content: markdown.parse(item.content),
+                id: item.id,
                 status: "FINISH",
             };
         });
@@ -256,9 +257,15 @@ const pushMessage = ({ message, id }) => {
 
 const queryText = ref();
 const loading = computed(() => state.messages?.some((item) => item.status !== "FINISH"));
+const generateId = () => {
+    if (state.messages.length === 0) {
+        return Date.now();
+    }
+    return (state.messages[state.messages.length - 1]?.id ?? Date.now()) + 1;
+}
 
 async function sendMessage(message) {
-    const id = Date.now();
+    const id = generateId();
     const messageItem = {
         type: MessageType.System,
         content: "正在生成中...",
@@ -313,7 +320,7 @@ const onGenerateClick = async () => {
             content: markdown.parse(queryText.value),
             status: "FINISH",
         },
-        id: Date.now(),
+        id: generateId(),
     });
     sendMessage(queryText.value);
     queryText.value = "";
