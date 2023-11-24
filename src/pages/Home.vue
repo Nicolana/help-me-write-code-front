@@ -1,5 +1,18 @@
 <template>
     <div class="chat-bot-container">
+        <el-dialog v-model="editDialogVisible" width="570px" title="修改">
+            <el-form :model="editChatFormData" label-position="top">
+                <el-form-item label="Chat name">
+                    <el-input v-model="editChatFormData.name" />
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="editDialogVisible = false">取消</el-button>
+                    <el-button type="primary" :loading="updateLoading" @click="onUpdateClick"> 确认 </el-button>
+                </span>
+            </template>
+        </el-dialog>
         <div class="chat-bot-wrap flex h-[calc(100vh-60px-24px-24px)] rounded-[0.5rem] overflow-hidden w-full">
             <div class="chat-bot-history w-[336px] bg-[rgb(245,245,245)] px-[16px] py-[16px] rounded-lg flex flex-col">
                 <div class="flex flex-col overflow-y-auto gap-1 flex-1" v-loading="chatDeleteLoading">
@@ -13,10 +26,15 @@
                         <div class="flex-1 text-gray-500 chat-bot-history-row-text">
                             {{ item.name }}
                         </div>
-                        <div class="chat-bot-history-row-delete" @click="deleteChatForMe(item.id)">
-                            <el-icon>
-                                <Delete />
-                            </el-icon>
+                        <div class="chat-bot-history-actions">
+                            <div class="chat-bot-history-row-edit" @click="editChatRow(item.id)">
+                                <el-icon><EditPen /></el-icon>
+                            </div>
+                            <div class="chat-bot-history-row-delete" @click="deleteChatForMe(item.id)">
+                                <el-icon>
+                                    <Delete />
+                                </el-icon>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,9 +124,9 @@
 import { computed, ref, reactive, watch } from "vue";
 import { isEmpty } from "../utils/index.js";
 import { ElMessage } from "element-plus";
-import { Promotion, Plus, Delete } from "@element-plus/icons-vue";
+import { Promotion, Plus, Delete, EditPen } from "@element-plus/icons-vue";
 import UserImage from "../assets/imgs/user.png";
-import { getChatList, createChat, getMessages, deleteChat } from "@/api";
+import { getChatList, createChat, getMessages, deleteChat, updateChat } from "@/api";
 import { useUserStore } from "@/store/user";
 import { markdown } from "@/utils/markdown";
 
@@ -221,7 +239,7 @@ watch(
  * 删除一个聊天记录
  */
 
- const chatDeleteLoading = ref(false);
+const chatDeleteLoading = ref(false);
 const deleteChatForMe = async (id) => {
     if (chatDeleteLoading.value) return;
     chatDeleteLoading.value = true;
@@ -231,10 +249,41 @@ const deleteChatForMe = async (id) => {
         ElMessage({
             message: "删除成功",
             type: "success",
-        })
+        });
         if (id === userStore.chatId) {
             userStore.setChat(null);
         }
+        getList();
+    }
+};
+
+/**
+ * 编辑聊天名字
+ * @param {*} param0
+ */
+const editDialogVisible = ref(false);
+const updateLoading = ref(false);
+const editChatFormData = ref({
+    name: "",
+    id: null,
+});
+const editChatRow = async (id) => {
+    const currentChat = chatList.value.find((item) => item.id === id);
+    editChatFormData.value = { ...currentChat };
+    editDialogVisible.value = true;
+};
+
+const onUpdateClick = async () => {
+    updateLoading.value = true;
+    const res = await updateChat(editChatFormData.value);
+    updateLoading.value = false;
+    if (res.data) {
+        ElMessage({
+            message: "修改成功",
+            type: "success",
+        });
+        editChatFormData.value = {};
+        editDialogVisible.value = false;
         getList();
     }
 };
@@ -262,7 +311,7 @@ const generateId = () => {
         return Date.now();
     }
     return (state.messages[state.messages.length - 1]?.id ?? Date.now()) + 1;
-}
+};
 
 async function sendMessage(message) {
     const id = generateId();
@@ -365,19 +414,24 @@ function handleKeyCode(event) {
 
 .chat-bot-history {
     .chat-bot-history-row {
-        .chat-bot-history-row-text {
-        }
-        .chat-bot-history-row-delete {
+        /* .chat-bot-history-row-text {
+        } */
+        .chat-bot-history-actions {
             display: none;
+            .chat-bot-history-row-edit,
+            .chat-bot-history-row-delete {
+                &:hover {
+                    color: rgba(0, 0, 0, 0.8);
+                }
+            }
         }
         &:hover {
-            .chat-bot-history-row-delete {
-                display: block;
+            .chat-bot-history-actions {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
                 color: rgba(0, 0, 0, 0.4);
                 cursor: pointer;
-                &:hover {
-                    color: rgba(0, 0, 0, 0.3);
-                }
             }
         }
     }

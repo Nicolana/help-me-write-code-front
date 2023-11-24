@@ -36,8 +36,8 @@ export function getChatList() {
  * @returns Promise<any>
  * @description 更新聊天信息
  */
-export function updateChat() {
-    return put('/chat/update')
+export function updateChat(payload) {
+    return put('/chat/update', payload)
 }
 
 /**
