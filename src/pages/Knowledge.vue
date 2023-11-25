@@ -16,7 +16,7 @@
                     <el-table-column prop="size" label="Size" width="120" />
                     <el-table-column prop="distance" label="距离计算方法" width="120" />
                     <el-table-column prop="description" label="描述" width="220" />
-                    <el-table-column fixed="right" label="操作" width="120">
+                    <el-table-column fixed="right" label="操作" width="150">
                         <template #default="{ row }">
                             <el-button link type="primary" size="small" @click="editKnowledge(row)">编辑</el-button>
                             <el-popconfirm title="确定要删除该知识库?" @confirm="deleteKnowledgeBase(row)">
@@ -24,6 +24,14 @@
                                     <el-button link type="primary" size="small">删除</el-button>
                                 </template>
                             </el-popconfirm>
+                            <el-button
+                                v-if="userStore.userInfo.knowledge_base_code !== row.code"
+                                link
+                                type="primary"
+                                size="small"
+                                @click="useKnowledgeBase(row.code)"
+                                >使用</el-button
+                            >
                         </template>
                     </el-table-column>
                 </el-table>
@@ -125,8 +133,17 @@
 
 <script setup>
 import { ref } from "vue";
-import { getKnowledgeList, createKnowledge, updateKnowledge, deleteKnowledge } from "@/api/knowledge";
+import {
+    getKnowledgeList,
+    createKnowledge,
+    updateKnowledge,
+    deleteKnowledge,
+    selectKnowledgeBase,
+} from "@/api/knowledge";
 import { ElMessage } from "element-plus";
+import { useUserStore } from "@/store/user";
+
+const userStore = useUserStore();
 
 const handleClick = () => {
     console.log("click");
@@ -208,7 +225,21 @@ const deleteKnowledgeBase = async (row) => {
         });
         tableDataRequest();
     }
-}
+};
+
+const useKnowledgeBase = async (code) => {
+    const res = await selectKnowledgeBase(code);
+    if (res.data) {
+        ElMessage({
+            message: "使用成功",
+            type: "success",
+        });
+        userStore.setUserInfoField({
+            key: "knowledge_base_code",
+            value: code,
+        });
+    }
+};
 </script>
 
 <style></style>

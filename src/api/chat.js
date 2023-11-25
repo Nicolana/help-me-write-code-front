@@ -48,5 +48,3 @@ export function updateChat(payload) {
 export function getMessages(id) {
     return get('/chat/messages', { chat_id: id })
 }
-
-

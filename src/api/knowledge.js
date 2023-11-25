@@ -42,3 +42,13 @@ export function getKnowledgeList(params) {
 export function updateKnowledge(payload) {
     return put('/knowledge_base/update', payload)
 }
+
+
+
+/**
+ * 选择 Knowledge Base
+ */
+export function selectKnowledgeBase(knowledge_base_code) {
+    return get(`/knowledge_base/select/${knowledge_base_code}`)
+}
+

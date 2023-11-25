@@ -10,9 +10,12 @@ export const useUserStore = defineStore('user', {
     getters: {
         getToken() {
             return this.token
-        },
+        }
     },
     actions: {
+        setUserInfoField({ key, value }) {
+            this.userInfo[key] = value
+        },
         setToken(token) {
             this.token = token
         },
