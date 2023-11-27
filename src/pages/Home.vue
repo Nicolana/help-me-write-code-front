@@ -94,7 +94,7 @@
                                 >
                                     <img :src="UserImage" alt="user icon" />
                                 </div>
-                                <div class="flex-1 text-[14px]">
+                                <div class="flex-1 text-[14px] w-[100px]">
                                     <div class="break-words" v-html="message.content"></div>
                                 </div>
                             </div>
