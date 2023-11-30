@@ -6,7 +6,8 @@
                     <div
                         class="menu-item px-2 text-gray-700"
                         :class="{
-                            '!text-[#626aef]': currentRoute === item.path,
+                            '!text-[#626aef]':
+                                item.path === '/' ? item.path === currentRoute : currentRoute.startsWith(item.path),
                         }"
                         v-for="item in menus"
                         :key="item.path"
@@ -72,10 +73,6 @@ const menus = ref([
     {
         title: "知识库",
         path: "/knowledge",
-    },
-    {
-        title: "知识库管理",
-        path: "/config",
     },
 ]);
 </script>

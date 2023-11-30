@@ -1,13 +1,13 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Home from '../pages/Home.vue'
-import Knowledge from '../pages/Knowledge.vue'
-import Config from '../pages/Config.vue'
+import Knowledge from '../pages/Knowledge/index.vue'
+import Config from '../pages/Knowledge/Config/index.vue'
 import Login from '../pages/User/Login.vue'
 
 const routes = [
     { path: '/', component: Home },
     { path: '/knowledge', component: Knowledge },
-    { path: '/config', component: Config },
+    { path: '/knowledge/config', name: 'KnowledgeConfig', component: Config },
     {
         path: '/login', component: Login
     }

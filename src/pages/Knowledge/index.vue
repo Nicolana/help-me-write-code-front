@@ -16,8 +16,9 @@
                     <el-table-column prop="size" label="Size" width="120" />
                     <el-table-column prop="distance" label="距离计算方法" width="120" />
                     <el-table-column prop="description" label="描述" width="220" />
-                    <el-table-column fixed="right" label="操作" width="150">
+                    <el-table-column fixed="right" label="操作" width="200">
                         <template #default="{ row }">
+                            <el-button link type="primary" size="small" @click="viewKnowledge(row)">查看</el-button>
                             <el-button link type="primary" size="small" @click="editKnowledge(row)">编辑</el-button>
                             <el-popconfirm title="确定要删除该知识库?" @confirm="deleteKnowledgeBase(row)">
                                 <template #reference>
@@ -142,8 +143,10 @@ import {
 } from "@/api/knowledge";
 import { ElMessage } from "element-plus";
 import { useUserStore } from "@/store/user";
+import { useRouter } from "vue-router";
 
 const userStore = useUserStore();
+const router = useRouter();
 
 const handleClick = () => {
     console.log("click");
@@ -240,6 +243,11 @@ const useKnowledgeBase = async (code) => {
         });
     }
 };
+
+const viewKnowledge = (row) => {
+    console.log("Row =", row);
+    router.push({ name: "KnowledgeConfig", params: { id: row.id } });
+}
 </script>
 
 <style></style>
