@@ -245,7 +245,6 @@ const useKnowledgeBase = async (code) => {
 };
 
 const viewKnowledge = (row) => {
-    console.log("Row =", row);
     router.push({ name: "KnowledgeConfig", params: { id: row.id } });
 }
 </script>

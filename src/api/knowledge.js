@@ -52,3 +52,28 @@ export function selectKnowledgeBase(knowledge_base_code) {
     return get(`/knowledge_base/select/${knowledge_base_code}`)
 }
 
+/**
+ * 获取数据集列表
+ */
+export function getKnowledgeItemList(params) {
+    return get('/knowledge_item/query_page', params)
+}
+
+/**
+ * 获取知识库详情
+ */
+export function getKnowledgeBaseInfo(id) {
+    return get('/knowledge_base/info', { knowledge_id: id })
+}
+
+export function deleteKnowledgeItem(ids = []) {
+    return del('/knowledge_item/delete', [...ids])
+}
+
+/**
+ * 同步知识库数据到向量数据库
+ */
+export function syncKnowledgeItem(ids=[]) {
+    return post('/knowledge_item/sync', [...ids])
+}
+

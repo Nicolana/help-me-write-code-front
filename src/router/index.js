@@ -7,7 +7,7 @@ import Login from '../pages/User/Login.vue'
 const routes = [
     { path: '/', component: Home },
     { path: '/knowledge', component: Knowledge },
-    { path: '/knowledge/config', name: 'KnowledgeConfig', component: Config },
+    { path: '/knowledge/config/:id', name: 'KnowledgeConfig', component: Config },
     {
         path: '/login', component: Login
     }
