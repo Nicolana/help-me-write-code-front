@@ -25,6 +25,9 @@ export const useUserStore = defineStore('user', {
         },
         async login(payload) {
             const res = await login(payload)
+            if (!res.data) {
+                throw res;
+            }
             this.token = res.data.access_token;
             localStorage.setItem('token', res.data.access_token);
             const userInfo = await getUserInfo()

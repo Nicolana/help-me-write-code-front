@@ -87,6 +87,7 @@ const submitForm = (el) => {
                 })
                 .catch(() => {
                     loading.value = false;
+                    ElMessage.error('账号或者密码错误');
                 });
         }
     });
