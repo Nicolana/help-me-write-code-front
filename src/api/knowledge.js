@@ -77,3 +77,10 @@ export function syncKnowledgeItem(ids=[]) {
     return post('/knowledge_item/sync', [...ids])
 }
 
+/**
+ * 搜索向量数据库
+ */
+export function searchKnowledgeItem(payload) {
+    return post('/knowledge_item/search', payload)
+}
+

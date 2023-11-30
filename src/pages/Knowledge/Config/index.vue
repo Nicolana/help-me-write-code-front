@@ -1,6 +1,6 @@
 <template>
     <div class="knowledge-item-config">
-        <el-tabs v-model="activeName" class="knowledge-item-config-tabs" @tab-click="handleClick" type="card">
+        <el-tabs v-model="activeName" class="knowledge-item-config-tabs" type="card">
             <el-tab-pane label="数据集" name="dataset">
                 <div class="flex items-center justify-between mb-5">
                     <div class="text-xl">知识库: {{ title }}</div>
@@ -49,7 +49,43 @@
                 </div>
             </el-tab-pane>
             <el-tab-pane label="搜索测试" name="search">
-                <div class="text-xl">做一些搜索测试的工作</div>
+                <div class="flex items-start justify-between flex-nowrap h-full gap-4">
+                    <div class="w-[450px] h-full px-3 py-3 bg-slate-100 rounded-md">
+                        <div class="text-base mb-5">测试文本</div>
+                        <div>
+                            <el-input
+                                type="textarea"
+                                :rows="10"
+                                v-model="searchText"
+                                placeholder="请输入需要测试的文本?"
+                            />
+
+                            <div class="flex justify-end">
+                                <el-button class="mt-2" type="primary" @click="submitSearch"> 测试 </el-button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div v-for="(item, index) in searchDataList" :key="index">
+                            <div class="bg-slate-100 px-3 py-3 mb-3 rounded-md text-sm">
+                                <div class="flex items-center mb-2 gap-4">
+                                    <div class="bg-slate-200 px-2 py-[1px] rounded-md tex-[12px]">
+                                        # {{ index + 1 }}
+                                    </div>
+                                    <div class="flex-1">
+                                        <el-progress :percentage="(item[1] * 100).toFixed(2)" :show-text="false" />
+                                    </div>
+                                    <span>
+                                        {{ item[1] }}
+                                    </span>
+                                </div>
+                                <div class="h-[100px] text-ellipsis overflow-hidden text-[12px]">
+                                    {{ item[0].page_content }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </el-tab-pane>
             <el-tab-pane label="配置" name="config">
                 <div class="text-xl">知识库配置方式</div>
@@ -81,11 +117,17 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRoute } from "vue-router";
 import { UploadFilled } from "@element-plus/icons-vue";
-import { getKnowledgeItemList, getKnowledgeBaseInfo, deleteKnowledgeItem, syncKnowledgeItem } from "@/api";
+import {
+    getKnowledgeItemList,
+    getKnowledgeBaseInfo,
+    deleteKnowledgeItem,
+    syncKnowledgeItem,
+    searchKnowledgeItem,
+} from "@/api";
 import dayjs from "dayjs";
 import { formatFileSize } from "@/utils";
 
@@ -95,7 +137,7 @@ const id = computed(() => route.params.id);
 
 const fileList = ref([]);
 
-const activeName = ref("dataset");
+const activeName = ref("search");
 
 const handleClick = (tab, event) => {
     console.log(tab, event);
@@ -110,10 +152,12 @@ const pagination = ref({
 });
 
 const title = ref("");
+const knowledge_info = ref({});
 const getKnowledgeInfo = async () => {
     const res = await getKnowledgeBaseInfo(id.value);
     if (res.code === 200) {
         title.value = res.data?.name;
+        knowledge_info.value = res.data;
     }
 };
 
@@ -135,8 +179,6 @@ const tableDataRequest = async () => {
         pagination.total = res.data?.total;
     }
 };
-
-tableDataRequest();
 
 const handleCurrentChange = (val) => {
     pagination.page = val;
@@ -179,4 +221,28 @@ const onFileUploadSuccess = () => {
 const uploadHeaders = ref({
     Authorization: "Bearer " + localStorage.getItem("token"),
 });
+
+// 搜索测试
+const searchText = ref();
+const searchDataList = ref([]);
+
+const submitSearch = async () => {
+    const res = await searchKnowledgeItem({
+        question: searchText.value,
+        knowledge_code: knowledge_info.value.code,
+        count: 10,
+    });
+    searchDataList.value = res;
+    console.log("Res =", res);
+};
+
+watch(
+    () => activeName.value,
+    (newTab) => {
+        if (newTab === "dataset") {
+            tableDataRequest();
+        }
+    },
+    { immediate: true }
+);
 </script>
