@@ -61,7 +61,7 @@
                             />
 
                             <div class="flex justify-end">
-                                <el-button class="mt-2" type="primary" @click="submitSearch"> 测试 </el-button>
+                                <el-button :loading="searchLoading" class="mt-2" type="primary" @click="submitSearch"> 测试 </el-button>
                             </div>
                         </div>
                     </div>
@@ -225,15 +225,16 @@ const uploadHeaders = ref({
 // 搜索测试
 const searchText = ref();
 const searchDataList = ref([]);
-
+const searchLoading = ref(false);
 const submitSearch = async () => {
+    searchLoading.value = true;
     const res = await searchKnowledgeItem({
         question: searchText.value,
         knowledge_code: knowledge_info.value.code,
         count: 10,
     });
+    searchLoading.value = false;
     searchDataList.value = res;
-    console.log("Res =", res);
 };
 
 watch(
