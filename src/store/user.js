@@ -20,8 +20,10 @@ export const useUserStore = defineStore('user', {
             this.token = token
         },
         async getUserInfo() {
-            const userInfo = await getUserInfo()
-            this.userInfo = userInfo.data
+            if (this.token && this.token !== '') {
+                const userInfo = await getUserInfo()
+                this.userInfo = userInfo.data
+            }
         },
         async login(payload) {
             const res = await login(payload)

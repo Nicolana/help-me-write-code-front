@@ -24,14 +24,16 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// 响应拦截器
 axiosInstance.interceptors.response.use(
   (response) => {
-    // 对响应数据进行处理，例如解析数据
     return response.data;
   },
   (error) => {
-    // 响应错误处理
+    if (error.response.status === 401) {
+      // 401 清除token信息并跳转到登录页面
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
