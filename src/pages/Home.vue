@@ -129,6 +129,7 @@ import UserImage from "../assets/imgs/user.png";
 import { getChatList, createChat, getMessages, deleteChat, updateChat } from "@/api";
 import { useUserStore } from "@/store/user";
 import { markdown } from "@/utils/markdown";
+import "highlight.js/styles/atom-one-dark.css";
 
 /**
  * 获取Chat List
