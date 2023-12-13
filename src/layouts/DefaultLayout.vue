@@ -74,6 +74,10 @@ const menus = ref([
         title: "知识库",
         path: "/knowledge",
     },
+    {
+        title: "Agent",
+        path: "/agent",
+    },
 ]);
 </script>
 

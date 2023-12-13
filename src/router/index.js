@@ -10,6 +10,9 @@ const routes = [
     { path: '/knowledge/config/:id', name: 'KnowledgeConfig', component: Config },
     {
         path: '/login', component: Login
+    },
+    {
+        path: '/agent', component: () => import('../pages/Agent/index.vue')
     }
 ]
 
