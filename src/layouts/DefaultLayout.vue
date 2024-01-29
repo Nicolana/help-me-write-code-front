@@ -1,7 +1,7 @@
 <template>
     <div class="h-full flex flex-col help-code-header">
         <el-header>
-            <div class="flex items-center justify-between max-w-[1200px] mx-auto">
+            <div class="flex items-center justify-between mx-auto px-[20px]">
                 <div class="menu-wrap flex items-center gap-4">
                     <div
                         class="menu-item px-2 text-gray-700"
@@ -32,7 +32,7 @@
         </el-header>
         <el-container>
             <el-main>
-                <div class="max-w-[1200px] mx-auto">
+                <div class="mx-auto">
                     <router-view></router-view>
                 </div>
             </el-main>
